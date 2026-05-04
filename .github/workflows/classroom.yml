@@ -18,9 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Tests de Código y Teoría"
+      - name: "C1-C8. Código y Commits"
+        id: code_tests
+        continue-on-error: true
         run: |
-          # C1 a C8 y C15 a C21 (Lo que ya tenés bien)
           make clean && make
           ! grep -q 'TODO' operaciones.c
           ./calculadora | grep -q '15'
@@ -28,32 +29,31 @@ jobs:
           git log --all --format='%s' | grep -q 'Revert'
           ! grep -q '<<<<<<<' operaciones.c
           ./calculadora | grep -q '4 es par = 1'
-          grep -q 'RESPUESTA_P1=b' readme.md
-          grep -q 'RESPUESTA_P2=b' readme.md
-          grep -q 'RESPUESTA_P3=c' readme.md
-          grep -q 'RESPUESTA_P4=b' readme.md
-          grep -q 'RESPUESTA_P5=c' readme.md
-          grep -q 'RESPUESTA_P6=b' readme.md
-          grep -q 'RESPUESTA_P7=c' readme.md
+          ! git log --format='%s' | grep -qE '^.{0,4}$'
 
-      - name: "C9-C10. Verificar feature/mi-funcion"
-        id: c9_10
+      - name: "C9-C14. Ramas y Pull Requests"
+        id: pr_tests
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git fetch --all --quiet
-          # Busca la rama o cualquier PR que la mencione
-          git branch -a | grep -i 'feature/mi-funcion' || gh pr list --state all | grep -i 'feature/mi-funcion'
+          # Verifica si existen rastros de la feature branch y su PR
+          gh pr list --state all | grep -i 'feature/mi-funcion' || git branch -a | grep -i 'feature/mi-funcion'
+          # Verifica si existen rastros de la sugerencia y su PR
+          gh pr list --state all | grep -i 'sugerencia' || git branch -a | grep -i 'sugerencia'
 
-      - name: "C11-C14. Verificar sugerencia"
-        id: c11_14
+      - name: "C15-C21. Preguntas Teóricas"
+        id: theory_tests
         continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Busca la rama sugerencia o cualquier PR relacionada
-          git branch -a | grep -i 'sugerencia' || gh pr list --state all | grep -i 'sugerencia'
+          grep -i 'RESPUESTA_P1=b' readme.md
+          grep -i 'RESPUESTA_P2=b' readme.md
+          grep -i 'RESPUESTA_P3=c' readme.md
+          grep -i 'RESPUESTA_P4=b' readme.md
+          grep -i 'RESPUESTA_P5=c' readme.md
+          grep -i 'RESPUESTA_P6=b' readme.md
+          grep -i 'RESPUESTA_P7=c' readme.md
 
       - name: Resultado Final
         if: always()
