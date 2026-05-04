@@ -225,7 +225,6 @@ jobs:
           SCORE=$((SCORE + $(pts "$O_C19"  3)))
           SCORE=$((SCORE + $(pts "$O_C20"  3)))
           SCORE=$((SCORE + $(pts "$O_C21"  3)))
-=======
           SCORE=$((SCORE + $(pts "$O_C1"   5)))
           SCORE=$((SCORE + $(pts "$O_C2"   5)))
           SCORE=$((SCORE + $(pts "$O_C3"  10)))
@@ -274,7 +273,6 @@ jobs:
             row "C19. P5: commits atomicos"                         "$O_C19"  3
             row "C20. P6: fetch vs pull"                            "$O_C20"  3
             row "C21. P7: descripcion de PR"                        "$O_C21"  3
-=======
             echo "| Test | Resultado | Puntos |"
             echo "|------|:---------:|-------:|"
             row "C1.  Proyecto compila"                             "$O_C1"   5
