@@ -78,6 +78,16 @@ jobs:
         continue-on-error: true
         run: grep -q 'RESPUESTA_P5=c' readme.md
 
+      - name: "C20. P6"
+        id: c20
+        continue-on-error: true
+        run: grep -q 'RESPUESTA_P6=b' readme.md
+
+      - name: "C21. P7"
+        id: c21
+        continue-on-error: true
+        run: grep -q 'RESPUESTA_P7=c' readme.md
+
       - name: Resultado Final
         if: always()
         uses: education/autograding@v1
