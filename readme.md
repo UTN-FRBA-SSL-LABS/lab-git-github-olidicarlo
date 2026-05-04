@@ -702,7 +702,6 @@ RESPUESTA_P7=c
 
 ## Entrega
 
-<<<<<<< HEAD
 ### Checklist
 
 - [ ] `feature/mi-funcion` mergeada a `main` vía PR
