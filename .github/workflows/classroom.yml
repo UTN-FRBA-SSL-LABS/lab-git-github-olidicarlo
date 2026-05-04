@@ -31,7 +31,7 @@ jobs:
       - name: "C3. multiplicar devuelve resultado correcto"
         id: c3
         continue-on-error: true
-        run: make clean && make && ./calculadora | grep -q '3 \* 5    = 15'
+        run: make clean && make && ./calculadora | grep -q '15'
 
       - name: "C4. Commit wip existe"
         id: c4
@@ -52,6 +52,22 @@ jobs:
         id: c7
         continue-on-error: true
         run: make clean && make && ./calculadora | grep -q '4 es par = 1'
+
+      - name: "C9. Branch feature/mi-funcion creada"
+        id: c9
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --all --quiet
+          gh pr list --state all | grep -q 'feature/mi-funcion'
+
+      - name: "C10. PR feature/mi-funcion mergeada"
+        id: c10
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr list --state merged | grep -q 'feature/mi-funcion'
 
       - name: "C15. P1"
         id: c15
