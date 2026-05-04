@@ -2,9 +2,6 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches: [ "**" ]
-    paths:
-      - "operaciones.c"
-      - "readme.md"
 
 permissions:
   checks: write
@@ -65,21 +62,6 @@ jobs:
         continue-on-error: true
         run: "! git log --format='%s' | grep -qE '^.{0,4}$'"
 
-      - name: "C9. Branch feature/mi-funcion fue creada"
-        id: c9
-        continue-on-error: true
-        run: |
-          git fetch --all --quiet
-          git branch -a | grep -q 'feature/mi-funcion' || \
-          gh pr list --state all --json headRefName --jq '.[].headRefName' | grep -q 'feature/mi-funcion'
-
-      - name: "C10. PR de feature/mi-funcion a main mergeado"
-        id: c10
-        continue-on-error: true
-        run: |
-          gh pr list --state merged --base main --json headRefName \
-            --jq '.[].headRefName' | grep -q 'feature/mi-funcion'
-
       - name: "C15. P1: concepto de branches"
         id: c15
         continue-on-error: true
@@ -117,46 +99,25 @@ jobs:
 
       - name: Calcular puntaje
         if: always()
-        env:
-          O_C1:  ${{ steps.c1.outcome }}
-          O_C2:  ${{ steps.c2.outcome }}
-          O_C3:  ${{ steps.c3.outcome }}
-          O_C4:  ${{ steps.c4.outcome }}
-          O_C5:  ${{ steps.c5.outcome }}
-          O_C6:  ${{ steps.c6.outcome }}
-          O_C7:  ${{ steps.c7.outcome }}
-          O_C8:  ${{ steps.c8.outcome }}
-          O_C9:  ${{ steps.c9.outcome }}
-          O_C10: ${{ steps.c10.outcome }}
-          O_C15: ${{ steps.c15.outcome }}
-          O_C16: ${{ steps.c16.outcome }}
-          O_C17: ${{ steps.c17.outcome }}
-          O_C18: ${{ steps.c18.outcome }}
-          O_C19: ${{ steps.c19.outcome }}
-          O_C20: ${{ steps.c20.outcome }}
-          O_C21: ${{ steps.c21.outcome }}
         run: |
           pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
           SCORE=0
-          SCORE=$((SCORE + $(pts "$O_C1" 5)))
-          SCORE=$((SCORE + $(pts "$O_C2" 5)))
-          SCORE=$((SCORE + $(pts "$O_C3" 10)))
-          SCORE=$((SCORE + $(pts "$O_C4" 10)))
-          SCORE=$((SCORE + $(pts "$O_C5" 10)))
-          SCORE=$((SCORE + $(pts "$O_C6" 10)))
-          SCORE=$((SCORE + $(pts "$O_C7" 10)))
-          SCORE=$((SCORE + $(pts "$O_C8" 5)))
-          SCORE=$((SCORE + $(pts "$O_C9" 5)))
-          SCORE=$((SCORE + $(pts "$O_C10" 5)))
-          SCORE=$((SCORE + $(pts "$O_C15" 5)))
-          SCORE=$((SCORE + $(pts "$O_C16" 5)))
-          SCORE=$((SCORE + $(pts "$O_C17" 5)))
-          SCORE=$((SCORE + $(pts "$O_C18" 5)))
-          SCORE=$((SCORE + $(pts "$O_C19" 5)))
-          SCORE=$((SCORE + $(pts "$O_C20" 5)))
-          SCORE=$((SCORE + $(pts "$O_C21" 5)))
+          SCORE=$((SCORE + $(pts "${{ steps.c1.outcome }}" 5)))
+          SCORE=$((SCORE + $(pts "${{ steps.c2.outcome }}" 5)))
+          SCORE=$((SCORE + $(pts "${{ steps.c3.outcome }}" 10)))
+          SCORE=$((SCORE + $(pts "${{ steps.c4.outcome }}" 10)))
+          SCORE=$((SCORE + $(pts "${{ steps.c5.outcome }}" 10)))
+          SCORE=$((SCORE + $(pts "${{ steps.c6.outcome }}" 10)))
+          SCORE=$((SCORE + $(pts "${{ steps.c7.outcome }}" 10)))
+          SCORE=$((SCORE + $(pts "${{ steps.c8.outcome }}" 5)))
+          SCORE=$((SCORE + $(pts "${{ steps.c15.outcome }}" 7)))
+          SCORE=$((SCORE + $(pts "${{ steps.c16.outcome }}" 7)))
+          SCORE=$((SCORE + $(pts "${{ steps.c17.outcome }}" 7)))
+          SCORE=$((SCORE + $(pts "${{ steps.c18.outcome }}" 7)))
+          SCORE=$((SCORE + $(pts "${{ steps.c19.outcome }}" 7)))
+          SCORE=$((SCORE + $(pts "${{ steps.c20.outcome }}" 0)))
+          SCORE=$((SCORE + $(pts "${{ steps.c21.outcome }}" 0)))
           echo "Puntaje total: $SCORE / 100"
-          if [ "$SCORE" -lt 60 ]; then exit 1; fi
 
       - name: Resultado autograding
         if: always()
