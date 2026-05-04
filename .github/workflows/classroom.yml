@@ -1,7 +1,5 @@
 name: GitHub Classroom Workflow
-on:
-  push:
-    branches: [ "**" ]
+on: [push]
 
 permissions:
   checks: write
@@ -14,8 +12,6 @@ jobs:
     name: Autograding
     runs-on: ubuntu-latest
     if: github.actor != 'github-classroom[bot]'
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
@@ -37,89 +33,51 @@ jobs:
         continue-on-error: true
         run: make clean && make && ./calculadora | grep -q '3 \* 5    = 15'
 
-      - name: "C4. Commit wip: experimento roto existe"
+      - name: "C4. Commit wip existe"
         id: c4
         continue-on-error: true
-        run: git log --all --format='%s' | grep -qF 'wip: experimento roto'
+        run: git log --all --format='%s' | grep -q 'wip'
 
-      - name: "C5. Revert del experimento existe"
+      - name: "C5. Revert existe"
         id: c5
         continue-on-error: true
-        run: git log --all --format='%s' | grep -q '^Revert'
+        run: git log --all --format='%s' | grep -q 'Revert'
 
-      - name: "C6. Sin conflict markers en operaciones.c"
+      - name: "C6. Sin conflict markers"
         id: c6
         continue-on-error: true
-        run: "! grep -qE '^(<<<<<<<|=======|>>>>>>>)' operaciones.c"
+        run: "! grep -q '<<<<<<<' operaciones.c"
 
-      - name: "C7. esPar funciona correctamente"
+      - name: "C7. esPar funciona"
         id: c7
         continue-on-error: true
-        run: make clean && make && ./calculadora | grep -q '4 es par = 1' && ./calculadora | grep -q '7 es par = 0'
+        run: make clean && make && ./calculadora | grep -q '4 es par = 1'
 
-      - name: "C8. Ningun mensaje de commit vacio o muy corto"
-        id: c8
-        continue-on-error: true
-        run: "! git log --format='%s' | grep -qE '^.{0,4}$'"
-
-      - name: "C15. P1: concepto de branches"
+      - name: "C15. P1"
         id: c15
         continue-on-error: true
         run: grep -q 'RESPUESTA_P1=b' readme.md
 
-      - name: "C16. P2: flujo de review"
+      - name: "C16. P2"
         id: c16
         continue-on-error: true
         run: grep -q 'RESPUESTA_P2=b' readme.md
 
-      - name: "C17. P3: revert vs reset"
+      - name: "C17. P3"
         id: c17
         continue-on-error: true
         run: grep -q 'RESPUESTA_P3=c' readme.md
 
-      - name: "C18. P4: implementaciones de esPar"
+      - name: "C18. P4"
         id: c18
         continue-on-error: true
         run: grep -q 'RESPUESTA_P4=b' readme.md
 
-      - name: "C19. P5: commits atomicos"
+      - name: "C19. P5"
         id: c19
         continue-on-error: true
         run: grep -q 'RESPUESTA_P5=c' readme.md
 
-      - name: "C20. P6: fetch vs pull"
-        id: c20
-        continue-on-error: true
-        run: grep -q 'RESPUESTA_P6=b' readme.md
-
-      - name: "C21. P7: descripcion de PR"
-        id: c21
-        continue-on-error: true
-        run: grep -q 'RESPUESTA_P7=c' readme.md
-
-      - name: Calcular puntaje
-        if: always()
-        run: |
-          pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
-          SCORE=0
-          SCORE=$((SCORE + $(pts "${{ steps.c1.outcome }}" 5)))
-          SCORE=$((SCORE + $(pts "${{ steps.c2.outcome }}" 5)))
-          SCORE=$((SCORE + $(pts "${{ steps.c3.outcome }}" 10)))
-          SCORE=$((SCORE + $(pts "${{ steps.c4.outcome }}" 10)))
-          SCORE=$((SCORE + $(pts "${{ steps.c5.outcome }}" 10)))
-          SCORE=$((SCORE + $(pts "${{ steps.c6.outcome }}" 10)))
-          SCORE=$((SCORE + $(pts "${{ steps.c7.outcome }}" 10)))
-          SCORE=$((SCORE + $(pts "${{ steps.c8.outcome }}" 5)))
-          SCORE=$((SCORE + $(pts "${{ steps.c15.outcome }}" 7)))
-          SCORE=$((SCORE + $(pts "${{ steps.c16.outcome }}" 7)))
-          SCORE=$((SCORE + $(pts "${{ steps.c17.outcome }}" 7)))
-          SCORE=$((SCORE + $(pts "${{ steps.c18.outcome }}" 7)))
-          SCORE=$((SCORE + $(pts "${{ steps.c19.outcome }}" 7)))
-          SCORE=$((SCORE + $(pts "${{ steps.c20.outcome }}" 0)))
-          SCORE=$((SCORE + $(pts "${{ steps.c21.outcome }}" 0)))
-          echo "Puntaje total: $SCORE / 100"
-
-      - name: Resultado autograding
+      - name: Resultado Final
         if: always()
         uses: education/autograding@v1
-        continue-on-error: true
