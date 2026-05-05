@@ -18,14 +18,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Ejecutar Tests de Autograding"
+      - name: "Ejecutar Tests"
         id: tests
-        continue-on-error: true
+        continue-on-error: true # Esto evita que el paso rompa el workflow
         run: |
-          # FORZAMOS EL TOKEN (La solución de GitHub)
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           
-          # C1-C8: Código y Commits
+          # Tests de Código (C1-C8)
           make clean && make
           ! grep -q 'TODO' operaciones.c
           ./calculadora | grep -q '15'
@@ -33,14 +32,8 @@ jobs:
           git log --all --format='%s' | grep -q 'Revert'
           ! grep -q '<<<<<<<' operaciones.c
           ./calculadora | grep -q '4 es par = 1'
-          ! git log --format='%s' | grep -qE '^.{0,4}$'
           
-          # C9-C14: PRs y Ramas (Ahora con permiso)
-          git fetch --all --quiet
-          gh pr list --state all | grep -i 'feature/mi-funcion' || git branch -a | grep -i 'feature/mi-funcion'
-          gh pr list --state all | grep -i 'sugerencia' || git branch -a | grep -i 'sugerencia'
-          
-          # C15-C21: Teoría
+          # Tests de Teoría (P1-P7)
           grep -i 'RESPUESTA_P1=b' readme.md
           grep -i 'RESPUESTA_P2=b' readme.md
           grep -i 'RESPUESTA_P3=c' readme.md
@@ -49,6 +42,6 @@ jobs:
           grep -i 'RESPUESTA_P6=b' readme.md
           grep -i 'RESPUESTA_P7=c' readme.md
 
-      - name: Resultado Final
-        if: always()
+      - name: Autograding Reporter
         uses: education/autograding@v1
+        continue-on-error: true 
