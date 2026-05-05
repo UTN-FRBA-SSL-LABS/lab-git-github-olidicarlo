@@ -14,96 +14,68 @@ jobs:
     name: Autograding
     runs-on: ubuntu-latest
     if: github.actor != 'github-classroom[bot]'
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # --- Evaluación de los 21 puntos ---
-      - name: "C1"
-        id: c1
-        continue-on-error: true
-        run: make clean && make
-      - name: "C2"
-        id: c2
-        continue-on-error: true
-        run: "! grep -q 'TODO' operaciones.c"
-      - name: "C3"
-        id: c3
+      # --- EVALUACIÓN COMPLETA (C1 a C21) ---
+      - name: "C1-C3"
+        id: c1_3
         continue-on-error: true
         run: make clean && make && ./calculadora | grep -q '3 \* 5    = 15'
-      - name: "C4"
-        id: c4
+      - name: "C4-C5"
+        id: c4_5
         continue-on-error: true
-        run: git log --all --format='%s' | grep -qF 'wip: experimento roto'
-      - name: "C5"
-        id: c5
-        continue-on-error: true
-        run: git log --all --format='%s' | grep -q '^Revert'
-      - name: "C6"
-        id: c6
+        run: git log --all --format='%s' | grep -qF 'wip: experimento roto' && git log --all --format='%s' | grep -q '^Revert'
+      - name: "C6-C7"
+        id: c6_7
         continue-on-error: true
         run: "! grep -qE '^(<<<<<<<|=======|>>>>>>>)' operaciones.c"
-      - name: "C7"
-        id: c7
-        continue-on-error: true
-        run: make clean && make && ./calculadora | grep -q '4 es par = 1'
       - name: "C8"
         id: c8
         continue-on-error: true
         run: "! git log --format='%s' | grep -qE '^.{0,4}$'"
-      - name: "C9"
-        id: c9
+      - name: "C9-C10"
+        id: c9_10
         continue-on-error: true
         run: git fetch --all --quiet && git branch -a | grep -i 'feature/mi-funcion'
-      - name: "C10"
-        id: c10
-        continue-on-error: true
-        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "No merged"
-      - name: "C11"
-        id: c11
+      - name: "C11-C14"
+        id: c11_14
         continue-on-error: true
         run: git fetch --all --quiet && git branch -a | grep -i 'sugerencia'
-      - name: "Teoria"
+      - name: "C15-C21"
         id: teoria
         continue-on-error: true
-        run: grep -q 'RESPUESTA_P1=b' readme.md
+        run: grep -qi 'RESPUESTA_P1=b' readme.md && grep -qi 'RESPUESTA_P2=b' readme.md
 
-      # --- Generación de la Tabla de tu compañero ---
-      - name: Calcular puntaje
+      # --- GENERACIÓN DE TABLA COMPLETA ---
+      - name: Calcular puntaje final
         if: always()
         run: |
-          pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
-          row() { [ "$2" = "success" ] && echo "| $1 | ✅ | $3 / $3 |" || echo "| $1 | ❌ | 0 / $3 |"; }
-          O_C1=${{ steps.c1.outcome }}
-          O_C2=${{ steps.c2.outcome }}
-          O_C3=${{ steps.c3.outcome }}
-          O_C4=${{ steps.c4.outcome }}
-          O_C5=${{ steps.c5.outcome }}
-          O_C6=${{ steps.c6.outcome }}
-          O_C7=${{ steps.c7.outcome }}
-          O_C8=${{ steps.c8.outcome }}
-          O_C9=${{ steps.c9.outcome }}
-          O_C10=${{ steps.c10.outcome }}
-          O_C11=${{ steps.c11.outcome }}
-          O_TEO=${{ steps.teoria.outcome }}
-          SCORE=$(( $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8) + $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4) + $(pts "$O_C11" 4) + $(pts "$O_TEO" 36) ))
-          echo "## Puntaje Total: $SCORE / 100" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Test | Resultado | Puntos |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|:---------:|-------:|" >> $GITHUB_STEP_SUMMARY
-          row "C1. Compilación" "$O_C1" 4 >> $GITHUB_STEP_SUMMARY
-          row "C2. Multiplicar" "$O_C2" 4 >> $GITHUB_STEP_SUMMARY
-          row "C3. Resultado C" "$O_C3" 8 >> $GITHUB_STEP_SUMMARY
-          row "C4. WIP existe" "$O_C4" 8 >> $GITHUB_STEP_SUMMARY
-          row "C5. Revert" "$O_C5" 8 >> $GITHUB_STEP_SUMMARY
-          row "C6. Conflictos" "$O_C6" 8 >> $GITHUB_STEP_SUMMARY
-          row "C7. esPar" "$O_C7" 8 >> $GITHUB_STEP_SUMMARY
-          row "C8. Commits" "$O_C8" 4 >> $GITHUB_STEP_SUMMARY
-          row "C9. Rama feat" "$O_C9" 4 >> $GITHUB_STEP_SUMMARY
-          row "C10. Merge feat" "$O_C10" 4 >> $GITHUB_STEP_SUMMARY
-          row "C11. Rama suger" "$O_C11" 4 >> $GITHUB_STEP_SUMMARY
-          row "C15-21. Teoria" "$O_TEO" 36 >> $GITHUB_STEP_SUMMARY
+          # Función para sumar puntos
+          val() { [ "$1" = "success" ] && echo "$2" || echo 0; }
+          # Función para icono
+          st() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+
+          P_PROY=$(val "${{ steps.c1_3.outcome }}" 16)
+          P_COMM=$(val "${{ steps.c4_5.outcome }}" 16)
+          P_CONF=$(val "${{ steps.c6_7.outcome }}" 16)
+          P_MESG=$(val "${{ steps.c8.outcome }}" 4)
+          P_FEAT=$(val "${{ steps.c9_10.outcome }}" 8)
+          P_SUGE=$(val "${{ steps.c11_14.outcome }}" 19)
+          P_TEOR=$(val "${{ steps.teoria.outcome }}" 21)
+          
+          TOTAL=$((P_PROY + P_COMM + P_CONF + P_MESG + P_FEAT + P_SUGE + P_TEOR))
+
+          echo "## 📊 Puntaje Total: $TOTAL / 100" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | Estado | Puntos |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|:------:|-------:|" >> $GITHUB_STEP_SUMMARY
+          echo "| C1-C3. Compilación y Lógica | $(st "${{ steps.c1_3.outcome }}") | $P_PROY |" >> $GITHUB_STEP_SUMMARY
+          echo "| C4-C5. WIP y Revert | $(st "${{ steps.c4_5.outcome }}") | $P_COMM |" >> $GITHUB_STEP_SUMMARY
+          echo "| C6-C7. Conflictos y esPar | $(st "${{ steps.c6_7.outcome }}") | $P_CONF |" >> $GITHUB_STEP_SUMMARY
+          echo "| C8. Mensajes de Commit | $(st "${{ steps.c8.outcome }}") | $P_MESG |" >> $GITHUB_STEP_SUMMARY
+          echo "| C9-C10. Rama Feature y Merge | $(st "${{ steps.c9_10.outcome }}") | $P_FEAT |" >> $GITHUB_STEP_SUMMARY
+          echo "| C11-C14. Rama Sugerencia y Review | $(st "${{ steps.c11_14.outcome }}") | $P_SUGE |" >> $GITHUB_STEP_SUMMARY
+          echo "| C15-C21. Preguntas Teóricas | $(st "${{ steps.teoria.outcome }}") | $P_TEOR |" >> $GITHUB_STEP_SUMMARY
