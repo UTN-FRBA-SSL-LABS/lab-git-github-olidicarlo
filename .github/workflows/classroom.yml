@@ -58,8 +58,7 @@ jobs:
       - name: "C10. PR de feature/mi-funcion a main mergeado"
         id: c10
         continue-on-error: true
-        run: |
-          gh pr list --state merged --base main --json headRefName --jq '.[].headRefName' | grep -i 'feature/mi-funcion' || git log --all --oneline | grep -i "Merge pull request" | grep -i "feature/mi-funcion"
+        run: gh pr list --state merged --base main --json headRefName --jq '.[].headRefName' | grep -i 'feature/mi-funcion' || git log --all --oneline | grep -i "Merge pull request" | grep -i "feature/mi-funcion"
 
       - name: "C11. Branch sugerencia/* fue creada"
         id: c11
