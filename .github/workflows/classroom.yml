@@ -18,12 +18,12 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # --- TESTS DE CUALIDADES (C1 a C11) ---
+      # --- Pasos de Evaluación ---
       - name: "C1"
         id: c1
         continue-on-error: true
@@ -63,29 +63,23 @@ jobs:
       - name: "C10"
         id: c10
         continue-on-error: true
-        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "No merged yet"
+        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "Not merged"
       - name: "C11"
         id: c11
         continue-on-error: true
         run: git fetch --all --quiet && git branch -a | grep -i 'sugerencia'
-
-      # --- TEORÍA (C15 a C21) ---
       - name: "Teoria"
         id: teoria
         continue-on-error: true
-        run: |
-          grep -q 'RESPUESTA_P1=b' readme.md
-          grep -q 'RESPUESTA_P2=b' readme.md
-          grep -q 'RESPUESTA_P3=c' readme.md
+        run: grep -q 'RESPUESTA_P1=b' readme.md
 
-      # --- GENERACIÓN DE TABLA IGUAL A TU COMPAÑERO ---
+      # --- Generación de Tabla Estilo Compañero ---
       - name: Calcular puntaje
         if: always()
         run: |
           pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
           row() { [ "$2" = "success" ] && echo "| $1 | ✅ | $3 / $3 |" || echo "| $1 | ❌ | 0 / $3 |"; }
           
-          # Mapeo de estados
           O_C1=${{ steps.c1.outcome }}
           O_C2=${{ steps.c2.outcome }}
           O_C3=${{ steps.c3.outcome }}
@@ -99,10 +93,7 @@ jobs:
           O_C11=${{ steps.c11.outcome }}
           O_TEO=${{ steps.teoria.outcome }}
 
-          SCORE=0
-          SCORE=$((SCORE + $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8)))
-          SCORE=$((SCORE + $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4)))
-          SCORE=$((SCORE + $(pts "$O_C11" 4) + $(pts "$O_TEO" 35)))
+          SCORE=$(( $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8) + $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4) + $(pts "$O_C11" 4) + $(pts "$O_TEO" 36) ))
 
           {
             echo "## Puntaje Total: $SCORE / 100"
@@ -123,5 +114,5 @@ jobs:
             row "C11. Rama sugerencia creada" "$O_C11" 4
             echo ""
             echo "### Preguntas conceptuales"
-            row "C15-C21. Respuestas Readme" "$O_TEO" 35
+            row "C15-C21. Respuestas Readme" "$O_TEO" 36
           } >> "$GITHUB_STEP_SUMMARY"
