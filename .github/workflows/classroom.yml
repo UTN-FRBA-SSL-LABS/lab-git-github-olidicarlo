@@ -18,10 +18,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "C1-C8. Código y Commits"
-        id: code_tests
+      - name: "Ejecutar Tests de Autograding"
+        id: tests
         continue-on-error: true
         run: |
+          # FORZAMOS EL TOKEN (La solución de GitHub)
+          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          
+          # C1-C8: Código y Commits
           make clean && make
           ! grep -q 'TODO' operaciones.c
           ./calculadora | grep -q '15'
@@ -30,23 +34,13 @@ jobs:
           ! grep -q '<<<<<<<' operaciones.c
           ./calculadora | grep -q '4 es par = 1'
           ! git log --format='%s' | grep -qE '^.{0,4}$'
-
-      - name: "C9-C14. Ramas y Pull Requests"
-        id: pr_tests
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+          
+          # C9-C14: PRs y Ramas (Ahora con permiso)
           git fetch --all --quiet
-          # Verifica si existen rastros de la feature branch y su PR
           gh pr list --state all | grep -i 'feature/mi-funcion' || git branch -a | grep -i 'feature/mi-funcion'
-          # Verifica si existen rastros de la sugerencia y su PR
           gh pr list --state all | grep -i 'sugerencia' || git branch -a | grep -i 'sugerencia'
-
-      - name: "C15-C21. Preguntas Teóricas"
-        id: theory_tests
-        continue-on-error: true
-        run: |
+          
+          # C15-C21: Teoría
           grep -i 'RESPUESTA_P1=b' readme.md
           grep -i 'RESPUESTA_P2=b' readme.md
           grep -i 'RESPUESTA_P3=c' readme.md
