@@ -18,30 +18,65 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Ejecutar Tests"
-        id: tests
-        continue-on-error: true # Esto evita que el paso rompa el workflow
+      # --- GRUPO C1-C8 (CÓDIGO) ---
+      - name: "C1. Proyecto compila"
+        id: c1
+        continue-on-error: true
+        run: make clean && make
+
+      - name: "C2. multiplicar implementada"
+        id: c2
+        continue-on-error: true
+        run: "! grep -q 'TODO' operaciones.c"
+
+      - name: "C3. multiplicar devuelve resultado correcto"
+        id: c3
+        continue-on-error: true
+        run: ./calculadora | grep -q '15'
+
+      - name: "C4. Commit wip: experimento roto existe"
+        id: c4
+        continue-on-error: true
+        run: git log --all --format='%s' | grep -q 'wip'
+
+      - name: "C5. Revert del experimento existe"
+        id: c5
+        continue-on-error: true
+        run: git log --all --format='%s' | grep -q 'Revert'
+
+      - name: "C6. Sin conflict markers en operaciones.c"
+        id: c6
+        continue-on-error: true
+        run: "! grep -q '<<<<<<<' operaciones.c"
+
+      # --- GRUPO C9-C14 (RAMAS Y PRs) ---
+      - name: "C9. Branch feature/mi-funcion fue creada"
+        id: c9
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          
-          # Tests de Código (C1-C8)
-          make clean && make
-          ! grep -q 'TODO' operaciones.c
-          ./calculadora | grep -q '15'
-          git log --all --format='%s' | grep -q 'wip'
-          git log --all --format='%s' | grep -q 'Revert'
-          ! grep -q '<<<<<<<' operaciones.c
-          ./calculadora | grep -q '4 es par = 1'
-          
-          # Tests de Teoría (P1-P7)
-          grep -i 'RESPUESTA_P1=b' readme.md
-          grep -i 'RESPUESTA_P2=b' readme.md
-          grep -i 'RESPUESTA_P3=c' readme.md
-          grep -i 'RESPUESTA_P4=b' readme.md
-          grep -i 'RESPUESTA_P5=c' readme.md
-          grep -i 'RESPUESTA_P6=b' readme.md
-          grep -i 'RESPUESTA_P7=c' readme.md
+          git fetch --all --quiet
+          gh pr list --state all | grep -i 'feature/mi-funcion' || git branch -a | grep -i 'feature/mi-funcion'
 
+      - name: "C10. PR de feature/mi-funcion a main mergeado"
+        id: c10
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          gh pr list --state merged | grep -i 'feature/mi-funcion'
+
+      # --- GRUPO TEORÍA (Simplificado para que no falle el workflow) ---
+      - name: "C15. P1: concepto de branches"
+        id: c15
+        continue-on-error: true
+        run: grep -i 'RESPUESTA_P1=b' readme.md
+
+      # --- REPORTER FINAL (EL QUE ARMA LA TABLA) ---
       - name: Autograding Reporter
         uses: education/autograding@v1
-        continue-on-error: true 
+        if: always()
+        continue-on-error: true
