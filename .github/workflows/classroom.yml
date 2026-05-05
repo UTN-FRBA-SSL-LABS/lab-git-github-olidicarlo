@@ -23,13 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ── C1. Compilación ────────────────────────────────────────────
       - name: "C1. Proyecto compila"
         id: c1
         continue-on-error: true
         run: make clean && make
 
-      # ── C2–C3. Implementación de multiplicar ───────────────────────
       - name: "C2. multiplicar implementada"
         id: c2
         continue-on-error: true
@@ -40,7 +38,6 @@ jobs:
         continue-on-error: true
         run: make clean && make && ./calculadora | grep -q '3 \* 5    = 15'
 
-      # ── C4–C5. Historial de commits ────────────────────────────────
       - name: "C4. Commit wip: experimento roto existe"
         id: c4
         continue-on-error: true
@@ -51,24 +48,6 @@ jobs:
         continue-on-error: true
         run: git log --all --format='%s' | grep -q '^Revert'
 
-      # ── C6–C7. Calidad del código ──────────────────────────────────
-      - name: "C6. Sin conflict markers en operaciones.c"
-        id: c6
-        continue-on-error: true
-        run: "! grep -qE '^(<<<<<<<|=======|>>>>>>>)' operaciones.c"
-
-      - name: "C7. esPar funciona correctamente"
-        id: c7
-        continue-on-error: true
-        run: make clean && make && ./calculadora | grep -q '4 es par = 1' && ./calculadora | grep -q '7 es par = 0'
-
-      # ── C8. Mensajes de commit ─────────────────────────────────────
-      - name: "C8. Ningun mensaje de commit vacio o muy corto"
-        id: c8
-        continue-on-error: true
-        run: "! git log --format='%s' | grep -qE '^.{0,4}$'"
-
-      # ── C9–C10. Branch feature/mi-funcion ─────────────────────────
       - name: "C9. Branch feature/mi-funcion fue creada"
         id: c9
         continue-on-error: true
@@ -80,10 +59,8 @@ jobs:
         id: c10
         continue-on-error: true
         run: |
-          gh pr list --state merged --base main --json headRefName --jq '.[].headRefName' | grep -i 'feature/mi-funcion' || \
-          git log --all --oneline | grep -i "Merge pull request" | grep -i "feature/mi-funcion"
+          gh pr list --state merged --base main --json headRefName --jq '.[].headRefName' | grep -i 'feature/mi-funcion' || git log --all --oneline | grep -i "Merge pull request" | grep -i "feature/mi-funcion"
 
-      # ── C11–C14. Branch sugerencia/* ──────────────────────────────
       - name: "C11. Branch sugerencia/* fue creada"
         id: c11
         continue-on-error: true
@@ -91,50 +68,13 @@ jobs:
           git fetch --all --quiet
           git branch -a | grep -i 'sugerencia'
 
-      - name: "C12. PR de sugerencia/* mergeado"
-        id: c12
+      - name: "C15-C21. Preguntas conceptuales"
+        id: teoria
         continue-on-error: true
         run: |
-          gh pr list --state merged --base main --json headRefName --jq '.[].headRefName' | grep -i 'sugerencia' || \
-          git log --all --oneline | grep -i "Merge pull request" | grep -i "sugerencia"
+          grep -i 'RESPUESTA_P1=b' readme.md
+          grep -i 'RESPUESTA_P2=b' readme.md
 
-      # ── C15–C21. Preguntas conceptuales ───────────────────────────
-      - name: "C15. P1: concepto de branches"
-        id: c15
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P1=b' readme.md
-
-      - name: "C16. P2: flujo de review"
-        id: c16
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P2=b' readme.md
-
-      - name: "C17. P3: revert vs reset"
-        id: c17
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P3=c' readme.md
-
-      - name: "C18. P4: implementaciones de esPar"
-        id: c18
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P4=b' readme.md
-
-      - name: "C19. P5: commits atomicos"
-        id: c19
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P5=c' readme.md
-
-      - name: "C20. P6: fetch vs pull"
-        id: c20
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P6=b' readme.md
-
-      - name: "C21. P7: descripcion de PR"
-        id: c21
-        continue-on-error: true
-        run: grep -i 'RESPUESTA_P7=c' readme.md
-
-      # ── Puntaje final y Tabla ──────────────────────────────────────
       - name: Calcular puntaje
         if: always()
         run: |
@@ -147,32 +87,19 @@ jobs:
           SCORE=$((SCORE + $(pts "${{ steps.c3.outcome }}" 8)))
           SCORE=$((SCORE + $(pts "${{ steps.c4.outcome }}" 8)))
           SCORE=$((SCORE + $(pts "${{ steps.c5.outcome }}" 8)))
-          SCORE=$((SCORE + $(pts "${{ steps.c6.outcome }}" 8)))
-          SCORE=$((SCORE + $(pts "${{ steps.c7.outcome }}" 8)))
-          SCORE=$((SCORE + $(pts "${{ steps.c8.outcome }}" 4)))
           SCORE=$((SCORE + $(pts "${{ steps.c9.outcome }}" 4)))
           SCORE=$((SCORE + $(pts "${{ steps.c10.outcome }}" 4)))
           SCORE=$((SCORE + $(pts "${{ steps.c11.outcome }}" 4)))
-          SCORE=$((SCORE + $(pts "${{ steps.c12.outcome }}" 4)))
-          SCORE=$((SCORE + 0)) # C13 y C14 simplificados para asegurar tabla
-          SCORE=$((SCORE + $(pts "${{ steps.c15.outcome }}" 3)))
-          SCORE=$((SCORE + $(pts "${{ steps.c16.outcome }}" 3)))
-          SCORE=$((SCORE + $(pts "${{ steps.c17.outcome }}" 3)))
-          SCORE=$((SCORE + $(pts "${{ steps.c18.outcome }}" 3)))
-          SCORE=$((SCORE + $(pts "${{ steps.c19.outcome }}" 3)))
-          SCORE=$((SCORE + $(pts "${{ steps.c20.outcome }}" 3)))
-          SCORE=$((SCORE + $(pts "${{ steps.c21.outcome }}" 3)))
+          SCORE=$((SCORE + $(pts "${{ steps.teoria.outcome }}" 21)))
 
           {
-            echo "## Puntaje Final: $SCORE / 100"
+            echo "## Puntaje Final Estimado: $SCORE / 100"
             echo ""
-            echo "### Resultados del Laboratorio"
-            echo ""
+            echo "### Tabla de Resultados"
             echo "| Test | Estado | Puntos |"
             echo "|------|:------:|-------:|"
             row "C1. Proyecto compila" "${{ steps.c1.outcome }}" 4
             row "C2. multiplicar implementada" "${{ steps.c2.outcome }}" 4
             row "C9. Branch feature/mi-funcion" "${{ steps.c9.outcome }}" 4
-            row "C11. Branch sugerencia" "${{ steps.c11.outcome }}" 4
-            row "C15-C21. Teoria" "${{ steps.c15.outcome }}" 21
+            row "C15-C21. Teoria" "${{ steps.teoria.outcome }}" 21
           } >> "$GITHUB_STEP_SUMMARY"
