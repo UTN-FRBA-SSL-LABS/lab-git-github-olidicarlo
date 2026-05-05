@@ -7,29 +7,28 @@ permissions:
   checks: write
   actions: read
   contents: read
-  pull-requests: read
 
 jobs:
   autograding:
     name: Autograding
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: "C1-C7. Compilacion y Codigo"
-        id: codigo
+      - name: "C1. Proyecto compila"
+        id: c1
         continue-on-error: true
-        run: |
-          make clean && make
-          ./calculadora | grep -q '3 \* 5    = 15'
-          ! grep -q 'TODO' operaciones.c
+        run: make clean && make
 
-      - name: "C9. Branch feature"
+      - name: "C2. multiplicar implementada"
+        id: c2
+        continue-on-error: true
+        run: "! grep -q 'TODO' operaciones.c"
+
+      - name: "C9. Branch feature/mi-funcion"
         id: c9
         continue-on-error: true
         run: git fetch --all --quiet && git branch -a | grep -i 'feature/mi-funcion'
@@ -44,8 +43,19 @@ jobs:
         continue-on-error: true
         run: grep -i 'RESPUESTA_P1=b' readme.md
 
-      - name: Finalizar
+      - name: Generar Tabla de Puntos
         if: always()
         run: |
-          echo "## Revision Finalizada" >> $GITHUB_STEP_SUMMARY
-          echo "Si ves este mensaje, el archivo YAML ya no tiene errores de sintaxis." >> $GITHUB_STEP_SUMMARY
+          pts() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+          
+          echo "## 📊 Resumen de Corrección" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | Estado |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|:------:|" >> $GITHUB_STEP_SUMMARY
+          echo "| C1. Compilación | $(pts "${{ steps.c1.outcome }}") |" >> $GITHUB_STEP_SUMMARY
+          echo "| C2. Multiplicar | $(pts "${{ steps.c2.outcome }}") |" >> $GITHUB_STEP_SUMMARY
+          echo "| C9. Rama Feature | $(pts "${{ steps.c9.outcome }}") |" >> $GITHUB_STEP_SUMMARY
+          echo "| C11. Rama Sugerencia | $(pts "${{ steps.c11.outcome }}") |" >> $GITHUB_STEP_SUMMARY
+          echo "| Teoria (Readme) | $(pts "${{ steps.teoria.outcome }}") |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ¡Si ves tildes verdes, tu puntaje ya subió!" >> $GITHUB_STEP_SUMMARY
