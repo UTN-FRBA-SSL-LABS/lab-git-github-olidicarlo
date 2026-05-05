@@ -16,14 +16,13 @@ jobs:
     if: github.actor != 'github-classroom[bot]'
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # --- Pasos de Evaluación ---
+      # --- Evaluación Individual ---
       - name: "C1"
         id: c1
         continue-on-error: true
@@ -63,7 +62,7 @@ jobs:
       - name: "C10"
         id: c10
         continue-on-error: true
-        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "Not merged"
+        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "No merged"
       - name: "C11"
         id: c11
         continue-on-error: true
@@ -79,7 +78,6 @@ jobs:
         run: |
           pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
           row() { [ "$2" = "success" ] && echo "| $1 | ✅ | $3 / $3 |" || echo "| $1 | ❌ | 0 / $3 |"; }
-          
           O_C1=${{ steps.c1.outcome }}
           O_C2=${{ steps.c2.outcome }}
           O_C3=${{ steps.c3.outcome }}
@@ -92,9 +90,126 @@ jobs:
           O_C10=${{ steps.c10.outcome }}
           O_C11=${{ steps.c11.outcome }}
           O_TEO=${{ steps.teoria.outcome }}
+          S1=$(( $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8) ))
+          S2=$(( $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4) + $(pts "$O_C11" 4) ))
+          ST=$(( $(pts "$O_TEO" 36) ))
+          SCORE=$(( S1 + S2 + ST ))
+          {
+            echo "## Puntaje Total: $SCORE / 100"
+            echo ""
+            echo "### Checks comportamentales"
+            echo "| Test | Resultado | Puntos |"
+            echo "|------|:---------:|-------:|"
+            row "C1. Proyecto compila" "$O_C1" 4
+            row "C2. Multiplicar implementada" "$O_C2" 4
+            row "C3. Resultado correcto" "$O_C3" 8
+            row "C4. Commit WIP existe" "$O_C4" 8
+            row "C5. Revert existe" "$O_C5" 8
+            row "C6. Sin conflictos" "$O_C6" 8
+            row "C7. esPar funciona" "$O_C7" 8
+            row "C8. Mensajes de commit" "$O_C8" 4
+            row "C9. Rama feature creada" "$O_C9" 4
+            row "C10. PR feature mergeada" "$O_C10" 4
+            row "C11. Rama sugerencia creada" "$O_C11" 4
+            echo ""
+            echo "### Preguntas conceptuales"
+            row "C15-C21. Respuestas Readme" "$O_TEO" 36
+          } >> "$GITHUB_STEP_SUMMARY"name: GitHub Classroom Workflow
+on:
+  push:
+    branches: [ "**" ]
 
-          SCORE=$(( $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8) + $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4) + $(pts "$O_C11" 4) + $(pts "$O_TEO" 36) ))
+permissions:
+  checks: write
+  actions: read
+  contents: read
+  pull-requests: read
 
+jobs:
+  autograding:
+    name: Autograding
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # --- Evaluación Individual ---
+      - name: "C1"
+        id: c1
+        continue-on-error: true
+        run: make clean && make
+      - name: "C2"
+        id: c2
+        continue-on-error: true
+        run: "! grep -q 'TODO' operaciones.c"
+      - name: "C3"
+        id: c3
+        continue-on-error: true
+        run: make clean && make && ./calculadora | grep -q '3 \* 5    = 15'
+      - name: "C4"
+        id: c4
+        continue-on-error: true
+        run: git log --all --format='%s' | grep -qF 'wip: experimento roto'
+      - name: "C5"
+        id: c5
+        continue-on-error: true
+        run: git log --all --format='%s' | grep -q '^Revert'
+      - name: "C6"
+        id: c6
+        continue-on-error: true
+        run: "! grep -qE '^(<<<<<<<|=======|>>>>>>>)' operaciones.c"
+      - name: "C7"
+        id: c7
+        continue-on-error: true
+        run: make clean && make && ./calculadora | grep -q '4 es par = 1'
+      - name: "C8"
+        id: c8
+        continue-on-error: true
+        run: "! git log --format='%s' | grep -qE '^.{0,4}$'"
+      - name: "C9"
+        id: c9
+        continue-on-error: true
+        run: git fetch --all --quiet && git branch -a | grep -i 'feature/mi-funcion'
+      - name: "C10"
+        id: c10
+        continue-on-error: true
+        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "No merged"
+      - name: "C11"
+        id: c11
+        continue-on-error: true
+        run: git fetch --all --quiet && git branch -a | grep -i 'sugerencia'
+      - name: "Teoria"
+        id: teoria
+        continue-on-error: true
+        run: grep -q 'RESPUESTA_P1=b' readme.md
+
+      # --- Generación de Tabla Estilo Compañero ---
+      - name: Calcular puntaje
+        if: always()
+        run: |
+          pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
+          row() { [ "$2" = "success" ] && echo "| $1 | ✅ | $3 / $3 |" || echo "| $1 | ❌ | 0 / $3 |"; }
+          O_C1=${{ steps.c1.outcome }}
+          O_C2=${{ steps.c2.outcome }}
+          O_C3=${{ steps.c3.outcome }}
+          O_C4=${{ steps.c4.outcome }}
+          O_C5=${{ steps.c5.outcome }}
+          O_C6=${{ steps.c6.outcome }}
+          O_C7=${{ steps.c7.outcome }}
+          O_C8=${{ steps.c8.outcome }}
+          O_C9=${{ steps.c9.outcome }}
+          O_C10=${{ steps.c10.outcome }}
+          O_C11=${{ steps.c11.outcome }}
+          O_TEO=${{ steps.teoria.outcome }}
+          S1=$(( $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8) ))
+          S2=$(( $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4) + $(pts "$O_C11" 4) ))
+          ST=$(( $(pts "$O_TEO" 36) ))
+          SCORE=$(( S1 + S2 + ST ))
           {
             echo "## Puntaje Total: $SCORE / 100"
             echo ""
