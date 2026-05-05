@@ -23,80 +23,69 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- PASOS DE EVALUACIÓN (C1 a C21) ---
+      # --- TESTS DE CUALIDADES (C1 a C11) ---
       - name: "C1"
         id: c1
         continue-on-error: true
         run: make clean && make
-
       - name: "C2"
         id: c2
         continue-on-error: true
         run: "! grep -q 'TODO' operaciones.c"
-
       - name: "C3"
         id: c3
         continue-on-error: true
         run: make clean && make && ./calculadora | grep -q '3 \* 5    = 15'
-
       - name: "C4"
         id: c4
         continue-on-error: true
         run: git log --all --format='%s' | grep -qF 'wip: experimento roto'
-
       - name: "C5"
         id: c5
         continue-on-error: true
         run: git log --all --format='%s' | grep -q '^Revert'
-
       - name: "C6"
         id: c6
         continue-on-error: true
         run: "! grep -qE '^(<<<<<<<|=======|>>>>>>>)' operaciones.c"
-
       - name: "C7"
         id: c7
         continue-on-error: true
         run: make clean && make && ./calculadora | grep -q '4 es par = 1'
-
       - name: "C8"
         id: c8
         continue-on-error: true
         run: "! git log --format='%s' | grep -qE '^.{0,4}$'"
-
       - name: "C9"
         id: c9
         continue-on-error: true
         run: git fetch --all --quiet && git branch -a | grep -i 'feature/mi-funcion'
-
       - name: "C10"
         id: c10
         continue-on-error: true
-        run: git log --all --oneline | grep -i "Merge pull request" | grep -i "feature/mi-funcion" || true
-
+        run: git log --all --oneline | grep -i "Merge" | grep -i "feature/mi-funcion" || echo "No merged yet"
       - name: "C11"
         id: c11
         continue-on-error: true
         run: git fetch --all --quiet && git branch -a | grep -i 'sugerencia'
 
-      - name: "C12-C14"
-        id: c12_14
-        continue-on-error: true
-        run: git log --all --oneline | grep -i "Merge" || true
-
-      - name: "C15-C21"
+      # --- TEORÍA (C15 a C21) ---
+      - name: "Teoria"
         id: teoria
         continue-on-error: true
-        run: grep -i 'RESPUESTA_P1=b' readme.md && grep -i 'RESPUESTA_P2=b' readme.md
+        run: |
+          grep -q 'RESPUESTA_P1=b' readme.md
+          grep -q 'RESPUESTA_P2=b' readme.md
+          grep -q 'RESPUESTA_P3=c' readme.md
 
-      # --- GENERACIÓN DE LA TABLA (IGUAL A TU COMPAÑERO) ---
+      # --- GENERACIÓN DE TABLA IGUAL A TU COMPAÑERO ---
       - name: Calcular puntaje
         if: always()
         run: |
           pts() { [ "$1" = "success" ] && echo "$2" || echo 0; }
           row() { [ "$2" = "success" ] && echo "| $1 | ✅ | $3 / $3 |" || echo "| $1 | ❌ | 0 / $3 |"; }
           
-          # Mapeo de resultados
+          # Mapeo de estados
           O_C1=${{ steps.c1.outcome }}
           O_C2=${{ steps.c2.outcome }}
           O_C3=${{ steps.c3.outcome }}
@@ -113,10 +102,10 @@ jobs:
           SCORE=0
           SCORE=$((SCORE + $(pts "$O_C1" 4) + $(pts "$O_C2" 4) + $(pts "$O_C3" 8) + $(pts "$O_C4" 8) + $(pts "$O_C5" 8)))
           SCORE=$((SCORE + $(pts "$O_C6" 8) + $(pts "$O_C7" 8) + $(pts "$O_C8" 4) + $(pts "$O_C9" 4) + $(pts "$O_C10" 4)))
-          SCORE=$((SCORE + $(pts "$O_C11" 4) + $(pts "$O_TEO" 21)))
+          SCORE=$((SCORE + $(pts "$O_C11" 4) + $(pts "$O_TEO" 35)))
 
           {
-            echo "## Puntaje: $SCORE / 100"
+            echo "## Puntaje Total: $SCORE / 100"
             echo ""
             echo "### Checks comportamentales"
             echo "| Test | Resultado | Puntos |"
@@ -134,5 +123,5 @@ jobs:
             row "C11. Rama sugerencia creada" "$O_C11" 4
             echo ""
             echo "### Preguntas conceptuales"
-            row "C15-C21. Respuestas Readme" "$O_TEO" 21
+            row "C15-C21. Respuestas Readme" "$O_TEO" 35
           } >> "$GITHUB_STEP_SUMMARY"
