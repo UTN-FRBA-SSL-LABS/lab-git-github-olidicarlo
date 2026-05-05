@@ -10,7 +10,7 @@ En proyectos de software real, raramente trabajás solo. Un equipo puede tener d
 Git resuelve exactamente eso. Pero Git no es solo un "backup con historial": es un protocolo de colaboración. La forma en que usás Git — cómo organizás los commits, qué nombres le ponés a las branches, cómo hacés los reviews — tiene un impacto directo en la calidad del trabajo en equipo.
 
 Este laboratorio simula el flujo de trabajo que vas a encontrar en equipos profesionales: ramas de trabajo, pull requests, revisión de código y resolución de conflictos.
-
+//i
 
 ### Herramientas necesarias
 
